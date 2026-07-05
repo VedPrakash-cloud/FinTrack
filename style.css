@@ -90,7 +90,6 @@ input, select, textarea {
     align-items: center;
     height: 100%;
     padding: 20px;
-    border: 1px solid;
     min-height: 100dvh;
 }
 
