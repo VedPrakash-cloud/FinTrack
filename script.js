@@ -483,13 +483,13 @@ if (userProfile.length > 0 && profileElement) {
 
 let myChartInstance = null;
 
-function chartData() {
+function chartData(filteredTransaction = null) {
   const chart = document.querySelector("#myChart");
   if (!chart) return;
 
   if (myChartInstance !== null) myChartInstance.destroy();
 
-  const chartTransacion =
+  const chartTransacion = filteredTransaction ||
     JSON.parse(
       localStorage.getItem(`transaction_${userProfile[0].username}`),
     ) || [];
@@ -511,13 +511,13 @@ function chartData() {
           label: "Income",
           data: [totalIncomeInChart],
           backgroundColor: "#166534",
-          borderRadius: 5,
+          borderRadius: 4,
         },
         {
           label: "Expense",
           data: [totalExpenseInChart],
           backgroundColor: "#991b1b",
-          borderRadius: 5,
+          borderRadius: 4,
         },
       ],
     },
@@ -529,7 +529,7 @@ function chartData() {
   });
 }
 
-function getTransaction() {
+function getTransaction(filteredData = null) {
   const currentBalance = document.querySelector(".curr_balance");
   const totalIncome = document.querySelector(".totalIncome");
   const totalExpense = document.querySelector(".totalExpense");
@@ -538,7 +538,7 @@ function getTransaction() {
 
   if (!table) return;
 
-  const transactionDetail =
+  const transactionDetail = filteredData ||
     JSON.parse(
       localStorage.getItem(`transaction_${userProfile[0].username}`),
     ) || [];
@@ -557,7 +557,8 @@ function getTransaction() {
     return curr.type === "Expense" ? (acc += Number(curr.amount)) : acc;
   }, 0);
 
-  chartData();
+  chartData(transactionDetail);
+
 
   table.innerHTML = transactionDetail
     .map((item) => {
@@ -621,4 +622,41 @@ if (verify) {
 function logout() {
   localStorage.removeItem("user");
   window.location.href = "../login/";
+}
+
+const searchTerm = document.querySelector("#searchItem");
+const filterType = document.querySelector("#filterList");
+
+document.body.addEventListener("input", (e)=>{
+  if(e.target && e.target.id === "searchItem") handleSearch();
+});
+
+document.body.addEventListener("change", (e)=>{
+  if(e.target && e.target.id === "filterList") handleSearch();
+});
+
+function handleSearch(){
+  const searchInput = document.querySelector("#searchItem");
+  const filterSelect = document.querySelector("#filterList");
+
+
+  if(!searchInput || !filterSelect) return ;
+
+
+  const term = searchTerm.value.toLowerCase();
+  const filterItem = filterType.value;
+
+  const userName = JSON.parse(localStorage.getItem("user"));
+
+  if(!userName || userName.length === 0) return;
+
+  const transaction = JSON.parse(localStorage.getItem(`transaction_${userName[0].username}`)) || [];
+
+  const filtered = transaction.filter(item => {
+    const searchItem = item.description.toLowerCase().includes(term) || item.category.toLowerCase().includes(term);
+    const filterList = (filterItem.toLowerCase() === "all") || (item.type === filterItem);
+    return searchItem && filterList;
+  })
+
+  getTransaction(filtered)
 }
